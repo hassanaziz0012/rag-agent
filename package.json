@@ -1,0 +1,23 @@
+{
+    "name": "rag-agent",
+    "version": "1.0.0",
+    "description": "",
+    "license": "ISC",
+    "author": "",
+    "type": "commonjs",
+    "main": "index.js",
+    "scripts": {
+        "dev:tailwind": "tailwindcss -i ./static/input.css -o ./static/output.css --watch",
+        "dev:fastapi": "uv run uvicorn app:app --reload",
+        "dev": "concurrently --kill-others \"bun run dev:tailwind\" \"bun run dev:fastapi\"",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "dependencies": {
+        "@tailwindcss/cli": "^4.1.18",
+        "tailwindcss": "^4.1.18"
+    },
+    "devDependencies": {
+        "@tailwindcss/typography": "^0.5.19",
+        "concurrently": "^9.2.1"
+    }
+}

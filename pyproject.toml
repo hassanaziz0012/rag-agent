@@ -1,0 +1,16 @@
+[project]
+name = "rag-agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.128.0",
+    "google-genai>=1.56.0",
+    "jinja2>=3.1.6",
+    "python-dotenv>=1.2.1",
+    "sentence-transformers>=5.2.0",
+    "torch>=2.9.1",
+    "triton>=3.5.1",
+    "uvicorn>=0.40.0",
+]
