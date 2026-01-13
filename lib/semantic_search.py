@@ -5,7 +5,7 @@ import torch
 model_name = "thenlper/gte-large"
 
 
-def load_or_generate_embeddings(embedding_file="embedded_paragraphs.pkl", book_file="book.md"):
+def load_or_generate_embeddings(embedding_file="data/embedded_paragraphs.pkl", book_file="book.md"):
     """Load embeddings from file or generate them if not found."""
     try:
         with open(embedding_file, "rb") as file:
