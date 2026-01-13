@@ -1,8 +1,9 @@
+import os
 from sentence_transformers import SentenceTransformer
 import pickle
 import torch
 
-model_name = "thenlper/gte-large"
+model_name = os.path.abspath("./models/gte-large")
 
 
 def load_or_generate_embeddings(embedding_file="data/embedded_paragraphs.pkl", book_file="book.md"):
