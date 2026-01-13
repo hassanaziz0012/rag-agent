@@ -1,169 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>RAG Agent</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-            rel="stylesheet"
-        />
-        <link href="/static/output.css" rel="stylesheet" />
-        <!-- Marked.js for Markdown rendering -->
-        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-        <style>
-            @keyframes spin {
-                to {
-                    transform: rotate(360deg);
-                }
-            }
-            .spinner {
-                animation: spin 1s linear infinite;
-            }
-            @keyframes bounce {
-                0%,
-                60%,
-                100% {
-                    transform: translateY(0);
-                }
-                30% {
-                    transform: translateY(-4px);
-                }
-            }
-            .typing-dot {
-                animation: bounce 1.4s infinite ease-in-out;
-            }
-            .typing-dot:nth-child(1) {
-                animation-delay: 0s;
-            }
-            .typing-dot:nth-child(2) {
-                animation-delay: 0.2s;
-            }
-            .typing-dot:nth-child(3) {
-                animation-delay: 0.4s;
-            }
-        </style>
-    </head>
-    <body
-        class="font-['Inter'] bg-[#f8f6f4] min-h-screen flex flex-col relative"
-    >
-        <!-- Subtle background gradient -->
-        <div
-            class="fixed inset-0 pointer-events-none -z-10 bg-[radial-gradient(circle_at_20%_20%,rgba(217,119,87,0.05)_0%,transparent_50%),radial-gradient(circle_at_80%_80%,rgba(217,119,87,0.03)_0%,transparent_50%)]"
-        ></div>
 
-        <!-- Chat Messages Container -->
-        <div class="flex-1 overflow-y-auto p-6 pb-48">
-            <div class="max-w-[720px] mx-auto">
-                <!-- Header -->
-                <div
-                    id="welcome-header"
-                    class="absolute inset-0 flex items-center justify-center pb-24 px-4"
-                >
-                    <h1
-                        class="text-3xl md:text-4xl font-bold leading-tight text-gray-900 text-center"
-                    >
-                        Hello <span class="text-[#d97757]">Hassan</span>,<br />
-                        what would you like to know?
-                    </h1>
-                </div>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RAG Agent</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="/static/output.css" rel="stylesheet" />
+    <!-- Marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link href="/static/animations.css" rel="stylesheet" />
+</head>
 
-                <!-- Chat Messages -->
-                <div id="chat-messages" class="flex flex-col gap-4">
-                    <!-- Messages will be dynamically inserted here -->
-                </div>
+<body class="font-['Inter'] bg-[#f8f6f4] min-h-screen flex flex-col relative">
+    <!-- Subtle background gradient -->
+    <div
+        class="fixed inset-0 pointer-events-none -z-10 bg-[radial-gradient(circle_at_20%_20%,rgba(217,119,87,0.05)_0%,transparent_50%),radial-gradient(circle_at_80%_80%,rgba(217,119,87,0.03)_0%,transparent_50%)]">
+    </div>
+
+    <!-- Chat Messages Container -->
+    <div class="flex-1 overflow-y-auto p-6 pb-48">
+        <div class="max-w-[720px] mx-auto">
+            <!-- Header -->
+            <div id="welcome-header" class="absolute inset-0 flex items-center justify-center pb-24 px-4">
+                <h1 class="text-3xl md:text-4xl font-bold leading-tight text-gray-900 text-center">
+                    Hello <span class="text-[#d97757]">Hassan</span>,<br />
+                    what would you like to know?
+                </h1>
+            </div>
+
+            <!-- Chat Messages -->
+            <div id="chat-messages" class="flex flex-col gap-4">
+                <!-- Messages will be dynamically inserted here -->
             </div>
         </div>
+    </div>
 
-        <!-- Input Form (Fixed at Bottom) -->
-        <div
-            class="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#f8f6f4] via-[#f8f6f4] to-transparent pt-6 pb-6 px-6"
-        >
-            <div class="max-w-[720px] mx-auto">
-                <div
-                    class="bg-white rounded-[20px] shadow-[0_8px_40px_rgba(0,0,0,0.1)] p-4 border border-gray-200"
-                >
-                    <form id="chat-form">
-                        <div class="relative">
-                            <textarea
-                                class="w-full px-5 py-4 pr-16 text-base border-2 border-gray-200 rounded-[14px] bg-[#f8f6f4] text-gray-900 outline-none transition-all duration-200 resize-none min-h-[56px] max-h-[200px] overflow-hidden placeholder:text-gray-500 focus:border-[#d97757] focus:shadow-[0_0_0_3px_rgba(217,119,87,0.15)]"
-                                placeholder="Ask whatever you want...."
-                                rows="1"
-                                id="message-input"
-                            ></textarea>
-                            <button
-                                type="submit"
-                                id="submit-btn"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-xl bg-gradient-to-br from-[#d97757] to-[#c4613f] border-none cursor-pointer flex items-center justify-center transition-all duration-200 shadow-[0_2px_8px_rgba(217,119,87,0.4)] hover:scale-105 hover:shadow-[0_4px_16px_rgba(217,119,87,0.5)] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-[0_2px_8px_rgba(217,119,87,0.4)]"
-                                aria-label="Send message"
-                            >
-                                <!-- Send Icon -->
-                                <svg
-                                    id="send-icon"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    class="w-5 h-5 text-white"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                                    <polygon
-                                        points="22 2 15 22 11 13 2 9 22 2"
-                                    ></polygon>
-                                </svg>
-                                <!-- Loading Spinner -->
-                                <svg
-                                    id="loading-icon"
-                                    class="w-5 h-5 text-white spinner hidden"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <circle
-                                        class="opacity-25"
-                                        cx="12"
-                                        cy="12"
-                                        r="10"
-                                        stroke="currentColor"
-                                        stroke-width="4"
-                                    ></circle>
-                                    <path
-                                        class="opacity-75"
-                                        fill="currentColor"
-                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                    ></path>
-                                </svg>
-                            </button>
-                        </div>
-                    </form>
-                </div>
+    <!-- Input Form (Fixed at Bottom) -->
+    <div
+        class="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#f8f6f4] via-[#f8f6f4] to-transparent pt-6 pb-6 px-6">
+        <div class="max-w-[720px] mx-auto">
+            <div class="bg-white rounded-[20px] shadow-[0_8px_40px_rgba(0,0,0,0.1)] p-4 border border-gray-200">
+                <form id="chat-form">
+                    <div class="relative">
+                        <textarea
+                            class="w-full px-5 py-4 pr-16 text-base border-2 border-gray-200 rounded-[14px] bg-[#f8f6f4] text-gray-900 outline-none transition-all duration-200 resize-none min-h-[56px] max-h-[200px] overflow-hidden placeholder:text-gray-500 focus:border-[#d97757] focus:shadow-[0_0_0_3px_rgba(217,119,87,0.15)]"
+                            placeholder="Ask whatever you want...." rows="1" id="message-input"></textarea>
+                        <button type="submit" id="submit-btn"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-xl bg-gradient-to-br from-[#d97757] to-[#c4613f] border-none cursor-pointer flex items-center justify-center transition-all duration-200 shadow-[0_2px_8px_rgba(217,119,87,0.4)] hover:scale-105 hover:shadow-[0_4px_16px_rgba(217,119,87,0.5)] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-[0_2px_8px_rgba(217,119,87,0.4)]"
+                            aria-label="Send message">
+                            <!-- Send Icon -->
+                            <svg id="send-icon" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                            <!-- Loading Spinner -->
+                            <svg id="loading-icon" class="w-5 h-5 text-white spinner hidden"
+                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
+    </div>
 
-        <script>
-            const textarea = document.getElementById("message-input");
-            const submitBtn = document.getElementById("submit-btn");
-            const sendIcon = document.getElementById("send-icon");
-            const loadingIcon = document.getElementById("loading-icon");
-            const chatMessages = document.getElementById("chat-messages");
+    <script>
+        const textarea = document.getElementById("message-input");
+        const submitBtn = document.getElementById("submit-btn");
+        const sendIcon = document.getElementById("send-icon");
+        const loadingIcon = document.getElementById("loading-icon");
+        const chatMessages = document.getElementById("chat-messages");
 
-            // Auto-resize textarea
-            textarea.addEventListener("input", function () {
-                this.style.height = "auto";
-                this.style.height = Math.min(this.scrollHeight, 200) + "px";
-            });
+        // Auto-resize textarea
+        textarea.addEventListener("input", function () {
+            this.style.height = "auto";
+            this.style.height = Math.min(this.scrollHeight, 200) + "px";
+        });
 
-            // Show typing indicator
-            function showTypingIndicator() {
-                const typingDiv = document.createElement("div");
-                typingDiv.id = "typing-indicator";
-                typingDiv.className = "flex justify-start";
-                typingDiv.innerHTML = `
+        // Show typing indicator
+        function showTypingIndicator() {
+            const typingDiv = document.createElement("div");
+            typingDiv.id = "typing-indicator";
+            typingDiv.className = "flex justify-start";
+            typingDiv.innerHTML = `
                     <div class="max-w-[80%] px-5 py-3 rounded-[18px] rounded-bl-[4px] bg-white text-gray-800 border border-gray-200 shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
                         <div class="flex items-center gap-1">
                             <span class="typing-dot w-2 h-2 bg-gray-400 rounded-full"></span>
@@ -172,129 +101,148 @@
                         </div>
                     </div>
                 `;
-                chatMessages.appendChild(typingDiv);
-                typingDiv.scrollIntoView({ behavior: "smooth", block: "end" });
+            chatMessages.appendChild(typingDiv);
+            typingDiv.scrollIntoView({ behavior: "smooth", block: "end" });
+        }
+
+        // Hide typing indicator
+        function hideTypingIndicator() {
+            const typingDiv = document.getElementById("typing-indicator");
+            if (typingDiv) {
+                typingDiv.remove();
+            }
+        }
+
+        // Hide welcome header
+        function hideWelcomeHeader() {
+            const header = document.getElementById("welcome-header");
+            if (header) {
+                header.style.display = "none";
+            }
+        }
+
+        // Set loading state
+        function setLoading(isLoading) {
+            submitBtn.disabled = isLoading;
+            textarea.disabled = isLoading;
+            if (isLoading) {
+                sendIcon.classList.add("hidden");
+                loadingIcon.classList.remove("hidden");
+                showTypingIndicator();
+            } else {
+                sendIcon.classList.remove("hidden");
+                loadingIcon.classList.add("hidden");
+                hideTypingIndicator();
+            }
+        }
+
+        // Add message to chat
+        function addMessage(content, isUser) {
+            if (isUser) {
+                hideWelcomeHeader();
             }
 
-            // Hide typing indicator
-            function hideTypingIndicator() {
-                const typingDiv = document.getElementById("typing-indicator");
-                if (typingDiv) {
-                    typingDiv.remove();
-                }
-            }
-
-            // Hide welcome header
-            function hideWelcomeHeader() {
-                const header = document.getElementById("welcome-header");
-                if (header) {
-                    header.style.display = "none";
-                }
-            }
-
-            // Set loading state
-            function setLoading(isLoading) {
-                submitBtn.disabled = isLoading;
-                textarea.disabled = isLoading;
-                if (isLoading) {
-                    sendIcon.classList.add("hidden");
-                    loadingIcon.classList.remove("hidden");
-                    showTypingIndicator();
-                } else {
-                    sendIcon.classList.remove("hidden");
-                    loadingIcon.classList.add("hidden");
-                    hideTypingIndicator();
-                }
-            }
-
-            // Add message to chat
-            function addMessage(content, isUser) {
-                if (isUser) {
-                    hideWelcomeHeader();
-                }
-
-                const messageDiv = document.createElement("div");
-                messageDiv.className = `flex ${
-                    isUser ? "justify-end" : "justify-start"
+            const messageDiv = document.createElement("div");
+            messageDiv.className = `flex ${isUser ? "justify-end" : "justify-start"
                 }`;
 
-                const bubbleDiv = document.createElement("div");
-                bubbleDiv.className = isUser
-                    ? "max-w-[80%] px-5 py-3 rounded-[18px] rounded-br-[4px] bg-gradient-to-br from-[#d97757] to-[#c4613f] text-white shadow-[0_2px_12px_rgba(217,119,87,0.3)]"
-                    : "max-w-[80%] px-5 py-3 rounded-[18px] rounded-bl-[4px] bg-white text-gray-800 border border-gray-200 shadow-[0_2px_12px_rgba(0,0,0,0.08)] prose prose-sm prose-gray max-w-none";
+            const bubbleDiv = document.createElement("div");
+            bubbleDiv.className = isUser
+                ? "max-w-[80%] px-5 py-3 rounded-[18px] rounded-br-[4px] bg-gradient-to-br from-[#d97757] to-[#c4613f] text-white shadow-[0_2px_12px_rgba(217,119,87,0.3)]"
+                : "max-w-[80%] px-5 py-3 rounded-[18px] rounded-bl-[4px] bg-white text-gray-800 border border-gray-200 shadow-[0_2px_12px_rgba(0,0,0,0.08)] prose prose-sm prose-gray max-w-none";
 
-                if (isUser) {
-                    // User messages: plain text, escaped
-                    bubbleDiv.innerHTML = `<p class="text-[15px] leading-relaxed whitespace-pre-wrap">${escapeHtml(
-                        content
-                    )}</p>`;
-                } else {
-                    // AI messages: render as markdown
-                    bubbleDiv.innerHTML = marked.parse(content);
-                }
-                messageDiv.appendChild(bubbleDiv);
-                chatMessages.appendChild(messageDiv);
-
-                // Scroll to bottom
-                messageDiv.scrollIntoView({ behavior: "smooth", block: "end" });
+            if (isUser) {
+                // User messages: plain text, escaped
+                bubbleDiv.innerHTML = `<p class="text-[15px] leading-relaxed whitespace-pre-wrap">${escapeHtml(
+                    content
+                )}</p>`;
+            } else {
+                // AI messages: render as markdown
+                bubbleDiv.innerHTML = marked.parse(content);
             }
+            messageDiv.appendChild(bubbleDiv);
+            chatMessages.appendChild(messageDiv);
 
-            // Escape HTML to prevent XSS
-            function escapeHtml(text) {
-                const div = document.createElement("div");
-                div.textContent = text;
-                return div.innerHTML;
-            }
+            // Scroll to bottom
+            messageDiv.scrollIntoView({ behavior: "smooth", block: "end" });
 
-            // Handle form submission
-            document
-                .getElementById("chat-form")
-                .addEventListener("submit", async function (e) {
-                    e.preventDefault();
-                    const message = textarea.value.trim();
-                    if (message && !submitBtn.disabled) {
-                        // Add user message
-                        addMessage(message, true);
+            return bubbleDiv;
+        }
 
-                        // Clear input
-                        textarea.value = "";
-                        textarea.style.height = "auto";
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement("div");
+            div.textContent = text;
+            return div.innerHTML;
+        }
 
-                        // Set loading state
-                        setLoading(true);
+        // Handle form submission
+        document
+            .getElementById("chat-form")
+            .addEventListener("submit", async function (e) {
+                e.preventDefault();
+                const message = textarea.value.trim();
+                if (message && !submitBtn.disabled) {
+                    // Add user message
+                    addMessage(message, true);
 
-                        try {
-                            const response = await fetch("/api/ask-agent", {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                },
-                                body: JSON.stringify({ query: message }),
-                            });
-                            const data = await response.json();
-                            // Add AI response
-                            addMessage(data, false);
-                        } catch (error) {
-                            console.error("Error:", error);
-                            addMessage(
-                                "Sorry, something went wrong. Please try again.",
-                                false
-                            );
-                        } finally {
-                            setLoading(false);
+                    // Clear input
+                    textarea.value = "";
+                    textarea.style.height = "auto";
+
+                    // Set loading state
+                    setLoading(true);
+
+                    try {
+                        const response = await fetch("/api/ask-agent", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({ query: message }),
+                        });
+
+                        // Create initial empty AI message
+                        const aiBubble = addMessage("", false);
+                        let fullText = "";
+
+                        const reader = response.body.getReader();
+                        const decoder = new TextDecoder();
+
+                        while (true) {
+                            const { done, value } = await reader.read();
+                            if (done) break;
+
+                            const chunk = decoder.decode(value, { stream: true });
+                            fullText += chunk;
+                            aiBubble.innerHTML = marked.parse(fullText);
+
+                            // Scroll to keep latest content in view
+                            aiBubble.scrollIntoView({ behavior: "smooth", block: "end" });
                         }
-                    }
-                });
 
-            // Submit on Enter (Shift+Enter for new line)
-            textarea.addEventListener("keydown", function (e) {
-                if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    document
-                        .getElementById("chat-form")
-                        .dispatchEvent(new Event("submit"));
+                    } catch (error) {
+                        console.error("Error:", error);
+                        addMessage(
+                            "Sorry, something went wrong. Please try again.",
+                            false
+                        );
+                    } finally {
+                        setLoading(false);
+                    }
                 }
             });
-        </script>
-    </body>
+
+        // Submit on Enter (Shift+Enter for new line)
+        textarea.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                document
+                    .getElementById("chat-form")
+                    .dispatchEvent(new Event("submit"));
+            }
+        });
+    </script>
+</body>
+
 </html>
