@@ -1,15 +1,16 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
+from lib.gemini import generate_stream_response
+from lib.prompts import build_query_prompt, build_answer_prompt
 from main import (
     load_api_key,
     load_or_generate_embeddings,
     get_embedding_model,
     search_paragraphs,
-    build_prompt,
     generate_response,
 )
 
@@ -51,7 +52,19 @@ class QueryRequest(BaseModel):
 @app.post("/api/ask-agent")
 async def ask_agent(request: QueryRequest):
     query = request.query
-    results = search_paragraphs(query, resources["embedded_paragraphs"], resources["model"])
-    prompt = build_prompt(query, results)
-    response = generate_response(resources["api_key"], prompt)
-    return response
+    rewrite_query_prompt = build_query_prompt(query)
+    rewritten_query = generate_response(resources["api_key"], rewrite_query_prompt)
+    print(f"Rewritten: {rewritten_query}")
+    if "INVALID_QUERY" in rewritten_query:
+        error_msg = "I am only able to answer questions related to the book \"Purpose and Profit\" by Dan Koe."
+        return StreamingResponse(
+            (error_msg),
+            media_type="text/plain"
+        )
+    else:
+        results = search_paragraphs(rewritten_query, resources["embedded_paragraphs"], resources["model"])
+        prompt = build_answer_prompt(rewritten_query, results)
+        return StreamingResponse(
+            generate_stream_response(resources["api_key"], prompt),
+            media_type="text/plain"
+        )
