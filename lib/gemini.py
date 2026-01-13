@@ -42,3 +42,11 @@ def generate_response(api_key, prompt):
     llm = genai.Client(api_key=api_key)
     resp = llm.models.generate_content(model="gemini-3-flash-preview", contents=prompt)
     return resp.text
+
+def generate_stream_response(api_key, prompt):
+    """Generate a streaming response from the LLM."""
+    llm = genai.Client(api_key=api_key)
+    resp = llm.models.generate_content_stream(model="gemini-3-flash-preview", contents=prompt)
+    print(resp)
+    for chunk in resp:
+        print(resp)
