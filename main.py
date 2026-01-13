@@ -3,7 +3,8 @@ from lib.semantic_search import (
     get_embedding_model,
     search_paragraphs,
 )
-from lib.gemini import load_api_key, build_prompt, generate_response
+from lib.gemini import load_api_key, generate_response
+from lib.prompts import build_answer_prompt
 
 def main():
     """Main function to run the RAG pipeline."""
@@ -30,7 +31,7 @@ def main():
         print()
 
     print("[6/6] Generating LLM response...")
-    prompt = build_prompt(query, results)
+    prompt = build_answer_prompt(query, results)
     response = generate_response(api_key, prompt)
     print("      Response from the LLM:")
     print(response)
