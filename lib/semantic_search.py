@@ -6,7 +6,9 @@ import torch
 model_name = os.path.abspath("./models/gte-large")
 
 
-def load_or_generate_embeddings(embedding_file="data/embedded_paragraphs.pkl", book_file="book.md"):
+def load_or_generate_embeddings(
+    embedding_file="data/embedded_paragraphs.pkl", book_file="data/book.md"
+):
     """Load embeddings from file or generate them if not found."""
     try:
         with open(embedding_file, "rb") as file:
@@ -30,7 +32,12 @@ def generate_embeddings(embedding_file, book_file):
 
     for i in range(0, len(paragraphs), batch_size):
         batch = paragraphs[i : i + batch_size]
-        embeddings = model.encode(batch, batch_size=len(batch), show_progress_bar=False, convert_to_tensor=True)
+        embeddings = model.encode(
+            batch,
+            batch_size=len(batch),
+            show_progress_bar=False,
+            convert_to_tensor=True,
+        )
         # Move to CPU for portable storage
         all_embeddings.extend([e.cpu() for e in embeddings])
 
