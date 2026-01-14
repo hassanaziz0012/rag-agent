@@ -22,6 +22,7 @@ Here are the top 5 paragraphs from the book that are most relevant to the user's
 {results}
 """
 
+
 def build_query_prompt(query):
     """Build the prompt for the LLM."""
     return f"""

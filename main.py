@@ -6,6 +6,7 @@ from lib.semantic_search import (
 from lib.gemini import load_api_key, generate_response
 from lib.prompts import build_answer_prompt
 
+
 def main():
     """Main function to run the RAG pipeline."""
     print("[1/6] Loading API key...")
