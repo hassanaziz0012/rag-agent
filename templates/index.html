@@ -9,9 +9,38 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="/static/output.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- Marked.js for Markdown rendering -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="/static/animations.css" rel="stylesheet" />
+    <style>
+        /* Line clamp utility */
+        .line-clamp-4 {
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Custom thin scrollbar */
+        .scrollbar-thin::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+    </style>
 </head>
 
 <body class="font-['Inter'] bg-[#f8f6f4] min-h-screen flex flex-col relative">
@@ -74,175 +103,8 @@
         </div>
     </div>
 
-    <script>
-        const textarea = document.getElementById("message-input");
-        const submitBtn = document.getElementById("submit-btn");
-        const sendIcon = document.getElementById("send-icon");
-        const loadingIcon = document.getElementById("loading-icon");
-        const chatMessages = document.getElementById("chat-messages");
-
-        // Auto-resize textarea
-        textarea.addEventListener("input", function () {
-            this.style.height = "auto";
-            this.style.height = Math.min(this.scrollHeight, 200) + "px";
-        });
-
-        // Show typing indicator
-        function showTypingIndicator() {
-            const typingDiv = document.createElement("div");
-            typingDiv.id = "typing-indicator";
-            typingDiv.className = "flex justify-start";
-            typingDiv.innerHTML = `
-                    <div class="max-w-[80%] px-5 py-3 rounded-[18px] rounded-bl-[4px] bg-white text-gray-800 border border-gray-200 shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
-                        <div class="flex items-center gap-1">
-                            <span class="typing-dot w-2 h-2 bg-gray-400 rounded-full"></span>
-                            <span class="typing-dot w-2 h-2 bg-gray-400 rounded-full"></span>
-                            <span class="typing-dot w-2 h-2 bg-gray-400 rounded-full"></span>
-                        </div>
-                    </div>
-                `;
-            chatMessages.appendChild(typingDiv);
-            typingDiv.scrollIntoView({ behavior: "smooth", block: "end" });
-        }
-
-        // Hide typing indicator
-        function hideTypingIndicator() {
-            const typingDiv = document.getElementById("typing-indicator");
-            if (typingDiv) {
-                typingDiv.remove();
-            }
-        }
-
-        // Hide welcome header
-        function hideWelcomeHeader() {
-            const header = document.getElementById("welcome-header");
-            if (header) {
-                header.style.display = "none";
-            }
-        }
-
-        // Set loading state
-        function setLoading(isLoading) {
-            submitBtn.disabled = isLoading;
-            textarea.disabled = isLoading;
-            if (isLoading) {
-                sendIcon.classList.add("hidden");
-                loadingIcon.classList.remove("hidden");
-                showTypingIndicator();
-            } else {
-                sendIcon.classList.remove("hidden");
-                loadingIcon.classList.add("hidden");
-                hideTypingIndicator();
-            }
-        }
-
-        // Add message to chat
-        function addMessage(content, isUser) {
-            if (isUser) {
-                hideWelcomeHeader();
-            }
-
-            const messageDiv = document.createElement("div");
-            messageDiv.className = `flex ${isUser ? "justify-end" : "justify-start"
-                }`;
-
-            const bubbleDiv = document.createElement("div");
-            bubbleDiv.className = isUser
-                ? "max-w-[80%] px-5 py-3 rounded-[18px] rounded-br-[4px] bg-gradient-to-br from-[#d97757] to-[#c4613f] text-white shadow-[0_2px_12px_rgba(217,119,87,0.3)]"
-                : "max-w-[80%] px-5 py-3 rounded-[18px] rounded-bl-[4px] bg-white text-gray-800 border border-gray-200 shadow-[0_2px_12px_rgba(0,0,0,0.08)] prose prose-sm prose-gray max-w-none";
-
-            if (isUser) {
-                // User messages: plain text, escaped
-                bubbleDiv.innerHTML = `<p class="text-[15px] leading-relaxed whitespace-pre-wrap">${escapeHtml(
-                    content
-                )}</p>`;
-            } else {
-                // AI messages: render as markdown
-                bubbleDiv.innerHTML = marked.parse(content);
-            }
-            messageDiv.appendChild(bubbleDiv);
-            chatMessages.appendChild(messageDiv);
-
-            // Scroll to bottom
-            messageDiv.scrollIntoView({ behavior: "smooth", block: "end" });
-
-            return bubbleDiv;
-        }
-
-        // Escape HTML to prevent XSS
-        function escapeHtml(text) {
-            const div = document.createElement("div");
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Handle form submission
-        document
-            .getElementById("chat-form")
-            .addEventListener("submit", async function (e) {
-                e.preventDefault();
-                const message = textarea.value.trim();
-                if (message && !submitBtn.disabled) {
-                    // Add user message
-                    addMessage(message, true);
-
-                    // Clear input
-                    textarea.value = "";
-                    textarea.style.height = "auto";
-
-                    // Set loading state
-                    setLoading(true);
-
-                    try {
-                        const response = await fetch("/api/ask-agent", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify({ query: message }),
-                        });
-
-                        // Create initial empty AI message
-                        const aiBubble = addMessage("", false);
-                        let fullText = "";
-
-                        const reader = response.body.getReader();
-                        const decoder = new TextDecoder();
-
-                        while (true) {
-                            const { done, value } = await reader.read();
-                            if (done) break;
-
-                            const chunk = decoder.decode(value, { stream: true });
-                            fullText += chunk;
-                            aiBubble.innerHTML = marked.parse(fullText);
-
-                            // Scroll to keep latest content in view
-                            aiBubble.scrollIntoView({ behavior: "smooth", block: "end" });
-                        }
-
-                    } catch (error) {
-                        console.error("Error:", error);
-                        addMessage(
-                            "Sorry, something went wrong. Please try again.",
-                            false
-                        );
-                    } finally {
-                        setLoading(false);
-                    }
-                }
-            });
-
-        // Submit on Enter (Shift+Enter for new line)
-        textarea.addEventListener("keydown", function (e) {
-            if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                document
-                    .getElementById("chat-form")
-                    .dispatchEvent(new Event("submit"));
-            }
-        });
-    </script>
+    <script src="/static/styles.js?v=2"></script>
+    <script src="/static/index.js?v=3"></script>
 </body>
 
 </html>
